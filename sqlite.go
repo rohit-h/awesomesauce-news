@@ -2,6 +2,8 @@ package main
 
 import (
 	"database/sql"
+	"log"
+	"os"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -24,8 +26,13 @@ func dbInsertPost(db *sql.DB, post Post) {
 
 func dbContainsPost(db *sql.DB, post Post) bool {
 
-	results, _ := db.Query("SELECT * FROM posts WHERE hyperlink = ? AND title = ?", post.link, post.title)
+	results, err := db.Query("SELECT * FROM posts WHERE hyperlink = ? AND title = ?", post.link, post.title)
 	defer results.Close()
+
+	if err != nil {
+		log.Fatal(err)
+		os.Exit(2)
+	}
 
 	// todo: figure out if we can return results.Count() >= 1 instead
 	for results.Next() {

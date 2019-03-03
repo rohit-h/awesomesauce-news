@@ -10,6 +10,10 @@ import (
 
 func telegramPostToChannel(apiToken, chatID string, post Post) (bool, error) {
 
+	if apiToken == "dummy" || chatID == "dummy" {
+		return true, nil
+	}
+
 	text := fmt.Sprintf("<a href='%s'>%s</a>\n<a href='%s'>[backlink]</a>", post.link, html.EscapeString(post.title), post.backlink)
 	text = strings.Replace(text, "'", "\\\"", -1)
 	payload := fmt.Sprintf("{\"chat_id\": \"%s\", \"parse_mode\": \"html\", \"disable_notification\": true, \"text\": \"%s\"}", chatID, text)

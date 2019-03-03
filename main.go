@@ -30,7 +30,11 @@ func main() {
 
 	getHackerNewsPosts(posts, &wg)
 
-	db, _ := dbGet("./awesomesauce.db")
+	db, err := dbGet("awesomesauce.db")
+	if err != nil {
+		log.Fatal(err)
+		os.Exit(1)
+	}
 	defer db.Close()
 
 	for post := range posts {
