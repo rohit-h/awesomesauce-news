@@ -3,18 +3,12 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"html"
 	"log"
 	"net/http"
 	"os"
 	"strings"
 )
-
-func htmlSafe(text string) string {
-	text = strings.Replace(text, "&", "&amp;", -1)
-	text = strings.Replace(text, "<", "&lt;", -1)
-	text = strings.Replace(text, ">", "&gt;", -1)
-	return text
-}
 
 var apiToken = os.Getenv("TELEGRAM_BOT_TOKEN")
 var chatID = os.Getenv("TELEGRAM_CHAT_ID")
@@ -34,7 +28,7 @@ func telegramCheckEnv() {
 
 func telegramPostToChannel(post Post) (bool, error) {
 
-	text := fmt.Sprintf("<a href='%s'>%s</a>\n<a href='%s'>[backlink]</a>", post.link, htmlSafe(post.title), post.backlink)
+	text := fmt.Sprintf("<a href='%s'>%s</a>\n<a href='%s'>[backlink]</a>", post.link, html.EscapeString(post.title), post.backlink)
 	text = strings.Replace(text, "'", "\\\"", -1)
 	payload := fmt.Sprintf("{\"chat_id\": \"%s\", \"parse_mode\": \"html\", \"disable_notification\": true, \"text\": \"%s\"}", chatID, text)
 

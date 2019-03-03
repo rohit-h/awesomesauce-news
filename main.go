@@ -7,6 +7,8 @@ import (
 
 func main() {
 
+	telegramCheckEnv()
+
 	posts := make(chan Post)
 	var wg sync.WaitGroup
 
@@ -15,17 +17,15 @@ func main() {
 		close(posts)
 	}()
 
-	telegramCheckEnv()
-
 	getHackerNewsPosts(posts, &wg)
 
-	db, _ := getDatabase("./awesomesauce.db")
+	db, _ := dbGet("./awesomesauce.db")
 	defer db.Close()
 
 	for post := range posts {
-		if !hasBeenPosted(db, post) {
+		if !dbContainsPost(db, post) {
 			if status, err := telegramPostToChannel(post); status {
-				markPosted(db, post)
+				dbInsertPost(db, post)
 			} else {
 				log.Fatalln(err)
 			}
@@ -34,5 +34,5 @@ func main() {
 		}
 	}
 
-	purgeOldEntries(db)
+	dbPurgeOldPosts(db)
 }
