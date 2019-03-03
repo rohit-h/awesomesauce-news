@@ -2,12 +2,23 @@ package main
 
 import (
 	"log"
+	"os"
 	"sync"
 )
 
+func getEnv(key string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		log.Fatalf("environment does not contain variable '%s'", key)
+		os.Exit(1)
+	}
+	return value
+}
+
 func main() {
 
-	telegramCheckEnv()
+	tgToken := getEnv("TELEGRAM_BOT_TOKEN")
+	tgChatID := getEnv("TELEGRAM_CHAT_ID")
 
 	posts := make(chan Post)
 	var wg sync.WaitGroup
@@ -24,7 +35,7 @@ func main() {
 
 	for post := range posts {
 		if !dbContainsPost(db, post) {
-			if status, err := telegramPostToChannel(post); status {
+			if success, err := telegramPostToChannel(tgToken, tgChatID, post); success {
 				dbInsertPost(db, post)
 			} else {
 				log.Fatalln(err)
@@ -35,4 +46,5 @@ func main() {
 	}
 
 	dbPurgeOldPosts(db)
+
 }
