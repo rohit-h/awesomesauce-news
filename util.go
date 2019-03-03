@@ -1,18 +1,18 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"os"
 )
 
 func dieOnError(err error, reason string, retcode int) {
 	if err != nil {
-		fmt.Printf("FAIL while: %s\n", reason)
-		fmt.Printf("     cause: %s\n", err)
+		log.Panic("FAIL while:" + reason)
 		os.Exit(retcode)
 	}
 }
 
+// Post "model" that will be passed around
 type Post struct {
-	link, title string
+	link, title, backlink string
 }

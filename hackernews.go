@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/anaskhan96/soup"
 )
@@ -12,10 +14,9 @@ var urlRoot = "https://news.ycombinator.com"
 
 // Returns html root element of HN page
 func getHackerNewsPage(pageNum int) soup.Root {
-	fullUrl := urlRoot + "/news?p=" + strconv.Itoa(pageNum)
-	fmt.Println(fullUrl)
-	resp, err := soup.Get(fullUrl)
-	dieOnError(err, "url fetch", 1)
+	fullURL := urlRoot + "/news?p=" + strconv.Itoa(pageNum)
+	resp, err := soup.Get(fullURL)
+	dieOnError(err, "url fetch : "+fullURL, 1)
 
 	return soup.HTMLParse(resp)
 }
@@ -35,9 +36,10 @@ func isStoryWorthPosting(doc soup.Root, storyID string) bool {
 
 	scoreSpan := doc.Find("span", "id", "score_"+storyID)
 	if scoreSpan.Pointer == nil {
-		fmt.Println("scoreSpan element does not exist")
+		log.Println("scoreSpan element does not exist")
 		return false
 	}
+
 	hnPointsText := scoreSpan.Text() // Expected: "[0-9]+ points"
 	hnPointsTextTokens := strings.Split(hnPointsText, " ")
 
@@ -56,20 +58,29 @@ func getStoryData(doc soup.Root, storyID string) Post {
 	if strings.Index(hyperlink, "item") == 0 {
 		hyperlink = urlRoot + "/" + hyperlink
 	}
+	backlink := fmt.Sprintf("%s/item?id=%s", urlRoot, storyID)
 
-	return Post{hyperlink, hrefElem.Text()}
+	return Post{hyperlink, hrefElem.Text(), backlink}
 }
 
-func appendNewsworthyPosts(pageNum int, posts chan Post) {
+func getHackerNewsPosts(posts chan Post, wg *sync.WaitGroup) {
 
-	page := getHackerNewsPage(pageNum)
+	var pagesToScrape = 3
+	wg.Add(pagesToScrape)
 
-	for _, storyID := range getStoriesInPage(page) {
-		if isStoryWorthPosting(page, storyID) {
-			hnPost := getStoryData(page, storyID)
-			// fmt.Println(hnPost)
-			posts <- hnPost
-		}
+	for pageNo := 1; pageNo <= pagesToScrape; pageNo++ {
+
+		go func(pageNo int) {
+			page := getHackerNewsPage(pageNo)
+			stories := getStoriesInPage(page)
+
+			for _, storyID := range stories {
+				if isStoryWorthPosting(page, storyID) {
+					posts <- getStoryData(page, storyID)
+				}
+			}
+			wg.Done()
+		}(pageNo)
 	}
 
 }

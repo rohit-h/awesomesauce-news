@@ -1,31 +1,38 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"sync"
 )
 
 func main() {
 
 	posts := make(chan Post)
+	var wg sync.WaitGroup
 
 	go func() {
-		for post := range posts {
-			fmt.Println(post)
-		}
+		wg.Wait()
+		close(posts)
 	}()
 
-	var wg sync.WaitGroup
-	wg.Add(3)
+	telegramCheckEnv()
 
-	for pageNum := 1; pageNum <= 3; pageNum++ {
-		go func(pageNum int) {
-			appendNewsworthyPosts(pageNum, posts)
-			wg.Done()
-		}(pageNum)
+	getHackerNewsPosts(posts, &wg)
+
+	db, _ := getDatabase("./awesomesauce.db")
+	defer db.Close()
+
+	for post := range posts {
+		if !hasBeenPosted(db, post) {
+			if status, err := telegramPostToChannel(post); status {
+				markPosted(db, post)
+			} else {
+				log.Fatalln(err)
+			}
+		} else {
+			log.Println("has been posted, skipping", post)
+		}
 	}
 
-	wg.Wait()
-	close(posts)
-
+	purgeOldEntries(db)
 }
