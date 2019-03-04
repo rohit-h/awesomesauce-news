@@ -21,12 +21,13 @@ func dbGet(filePath string) (*sql.DB, error) {
 
 func dbInsertPost(db *sql.DB, post Post) {
 	statement, _ := db.Prepare("INSERT INTO posts (hyperlink, title, posted_on) VALUES (?, ?, ?)")
-	statement.Exec(post.link, post.title, time.Now().Unix())
+	result, err := statement.Exec(post.link, post.title, time.Now().Unix())
+	log.Println(result, err)
 }
 
 func dbContainsPost(db *sql.DB, post Post) bool {
 
-	results, err := db.Query("SELECT * FROM posts WHERE hyperlink = ? AND title = ?", post.link, post.title)
+	results, err := db.Query("SELECT * FROM posts WHERE hyperlink = ?", post.link)
 	defer results.Close()
 
 	if err != nil {
