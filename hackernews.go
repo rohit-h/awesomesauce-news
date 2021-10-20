@@ -52,7 +52,7 @@ func isStoryWorthPosting(doc soup.Root, storyID string) bool {
 func getStoryData(doc soup.Root, storyID string) Post {
 
 	storyRow := doc.Find("tr", "id", storyID)
-	hrefElem := storyRow.Find("a", "class", "storylink")
+	hrefElem := storyRow.Find("a", "class", "titlelink")
 
 	hyperlink := hrefElem.Attrs()["href"]
 	if strings.Index(hyperlink, "item") == 0 {
