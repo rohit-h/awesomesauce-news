@@ -11,8 +11,3 @@ func dieOnError(err error, reason string, retcode int) {
 		os.Exit(retcode)
 	}
 }
-
-// Post "model" that will be passed around
-type Post struct {
-	link, title, backlink string
-}

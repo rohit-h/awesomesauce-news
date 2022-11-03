@@ -1,0 +1,8 @@
+[Unit]
+Description=Hackernews scraper and digest posting tool
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/awesomesauce.env
+ExecStart=/opt/awesomesauce/src/awesomesauce-news -digest
+WorkingDirectory=/opt/awesomesauce/src

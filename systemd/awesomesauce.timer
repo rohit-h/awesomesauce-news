@@ -1,0 +1,8 @@
+[Unit]
+Description=Timer for Hackernews scraper and posting tool
+
+[Timer]
+OnCalendar=*:0/15
+
+[Install]
+WantedBy=timers.target

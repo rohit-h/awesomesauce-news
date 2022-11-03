@@ -1,0 +1,8 @@
+[Unit]
+Description=Timer for Hackernews digest scraper and posting tool
+
+[Timer]
+OnCalendar=*-*-* 14:30:00
+
+[Install]
+WantedBy=timers.target
