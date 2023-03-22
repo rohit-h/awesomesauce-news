@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"time"
 
@@ -20,19 +21,14 @@ func dbGet(filePath string) (*sql.DB, error) {
 
 func dbInsertPost(db *sql.DB, item HnItem) {
 	statement, _ := db.Prepare("INSERT INTO posts (id, score, title, url, time, in_digest) VALUES (?, ?, ?, ?, ?, 0)")
-	result, err := statement.Exec(item.Id, item.Score, item.Title, item.Url, item.Time)
-	if err != nil {
-		log.Println(result, err)
-		dieOnError(err, "error while inserting item into posts table", 4)
-	}
+	_, err := statement.Exec(item.Id, item.Score, item.Title, item.Url, item.Time)
+	assertNoError(err, "error while inserting item into posts table", 4)
 }
 
 func dbContainsPost(db *sql.DB, itemId int) bool {
 
 	results, err := db.Query("SELECT * FROM posts WHERE id = ?", itemId)
-	if err != nil {
-		dieOnError(err, "error while querying posts with id", 1)
-	}
+	assertNoError(err, fmt.Sprintf("error while querying posts with id %d", itemId), 1)
 	defer results.Close()
 
 	// todo: figure out if we can return results.Count() >= 1 instead
@@ -55,14 +51,14 @@ func dbGetPostsNotInAnyDigest(db *sql.DB) []HnItem {
 
 	results, err := db.Query("SELECT id, score, title, url, time FROM posts WHERE in_digest = 0")
 	if err != nil {
-		dieOnError(err, "error while querying posts not in digest", 1)
+		assertNoError(err, "error while querying posts not in digest", 1)
 	}
 	defer results.Close()
 	for results.Next() {
 		item := HnItem{}
 		err = results.Scan(&item.Id, &item.Score, &item.Title, &item.Url, &item.Time)
 		if err != nil {
-			dieOnError(err, "error parsing row to HnItem", 1)
+			assertNoError(err, "error parsing row to HnItem", 1)
 		}
 		posts = append(posts, item)
 	}
@@ -75,7 +71,7 @@ func dbMarkPostInDigest(db *sql.DB, item HnItem) {
 	result, err := statement.Exec(time.Now().Unix(), item.Id)
 	if err != nil {
 		log.Println(result, err)
-		dieOnError(err, "error while updating in_digest in posts table", 4)
+		assertNoError(err, "error while updating in_digest in posts table", 4)
 	}
 }
 
@@ -84,6 +80,6 @@ func dbUpdatePost(db *sql.DB, item HnItem) {
 	result, err := statement.Exec(item.Score, item.Title, item.Url, item.Id)
 	if err != nil {
 		log.Println(result, err)
-		dieOnError(err, "error while updating item in posts table", 4)
+		assertNoError(err, "error while updating item in posts table", 4)
 	}
 }

@@ -5,9 +5,10 @@ import (
 	"os"
 )
 
-func dieOnError(err error, reason string, retcode int) {
+func assertNoError(err error, reason string, retcode int) {
 	if err != nil {
 		log.Panic("FAIL while:" + reason)
+		log.Panic("error:" + err.Error())
 		os.Exit(retcode)
 	}
 }

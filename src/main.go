@@ -24,11 +24,9 @@ func scrapeAndPost(db *sql.DB, tgToken string, tgChatId string) {
 		} else {
 			itemData := getHackerNewsItem(itemId)
 			if isStoryWorthPosting(itemData) {
-				if success, err := tgSendPost(tgToken, tgChatId, itemData); success {
-					dbInsertPost(db, itemData)
-				} else {
-					log.Fatalln(err)
-				}
+				err := tgSendPost(tgToken, tgChatId, itemData)
+				assertNoError(err, "failed to sendMessage", 1)
+				dbInsertPost(db, itemData)
 			}
 		}
 	}
@@ -59,9 +57,9 @@ func sendDigestPost(db *sql.DB, tgToken string, tgChatId string) {
 		topPosts = posts[:10]
 	}
 
-	status, err := tgSendDigest(tgToken, tgChatId, topPosts)
-	if err != nil || !status {
-		dieOnError(err, "failed to post digest, http error", 2)
+	err := tgSendDigest(tgToken, tgChatId, topPosts)
+	if err != nil {
+		assertNoError(err, "failed to post digest, http error", 2)
 	}
 
 	for _, post := range topPosts {
@@ -79,7 +77,7 @@ func main() {
 
 	db, err := dbGet("awesomesauce.db")
 	if err != nil {
-		dieOnError(err, "failed to open db file", 1)
+		assertNoError(err, "failed to open db file", 1)
 	}
 	defer db.Close()
 
