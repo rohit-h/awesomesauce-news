@@ -15,6 +15,7 @@ var apiEndpoint = "https://hacker-news.firebaseio.com/v0"
 type HnItem struct {
 	Id    int
 	Score int
+	Dead  bool
 	Time  int
 	Title string
 	Url   string
@@ -43,10 +44,10 @@ func validateItemFields(item HnItem) {
 		assertNoError(customErr, "Id field cannot be 0", 2)
 	}
 	if item.Time == 0 {
-		assertNoError(customErr, "Time field cannot be 0", 2)
+		assertNoError(customErr, "Time field cannot be 0, "+strconv.Itoa(item.Id), 2)
 	}
-	if item.Title == "" {
-		assertNoError(customErr, "Title field cannot be empty", 2)
+	if item.Title == "" && !item.Dead {
+		assertNoError(customErr, "Title field cannot be empty,"+strconv.Itoa(item.Id), 2)
 	}
 }
 
@@ -71,6 +72,9 @@ func getHackerNewsItem(itemId int) HnItem {
 
 func isStoryWorthPosting(story HnItem) bool {
 	var postThreshold = 100
+	if story.Dead {
+		return false
+	}
 	if story.Score >= postThreshold {
 		log.Printf("Post meets threshold [%d<%d] [%d|%s]\n", postThreshold, story.Score, story.Id, story.Title)
 		return true
